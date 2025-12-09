@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8" />
+  <title>Movies - MovieApp</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+
+  <div th:insert="~{layout :: siteHeader}"></div>
+
+  <main class="container">
+    <section>
+      <div class="page-header">
+        <h1>Movies</h1>
+        <form class="search" th:action="@{/movies}" method="get">
+          <input type="text" name="q" th:value="${q}" placeholder="Search title..." />
+          <button type="submit">Search</button>
+        </form>
+      </div>
+
+      <div class="movies-grid" th:if="${movies}">
+        <div class="movie-card" th:each="m : ${movies}">
+          <a th:href="@{|/movies/view/${m.id}|}">
+            <div class="poster">
+              <img th:if="${!#strings.isEmpty(m.posterFilename)}" th:src="${m.posterFilename}" alt="poster" />
+              <div th:if="${#strings.isEmpty(m.posterFilename)}" class="no-poster">No Image</div>
+              
+            </div>
+          </a>
+
+          <div class="movie-body">
+            <h3 th:text="${m.title}">Title</h3>
+            <p class="meta">
+              <span th:text="${m.year}">2020</span> •
+              <span th:text="${m.genre}">Genre</span>
+            </p>
+            <p class="desc" th:text="${#strings.abbreviate(m.description, 120)}"></p>
+
+            <div class="actions">
+              <a th:href="@{|/movies/view/${m.id}|}">View</a>
+              <span sec:authorize="hasRole('ADMIN')">
+                | <a th:href="@{|/movies/edit/${m.id}|}">Edit</a>
+                | <a th:href="@{|/movies/delete/${m.id}|}" onclick="return confirm('Delete?')">Delete</a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div th:if="${movies == null or #lists.isEmpty(movies)}">
+        <p>No movies found.</p>
+      </div>
+    </section>
+  </main>
+
+  <div th:insert="~{layout :: siteFooter}"></div>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${movie.title}">Movie</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+
+  <div th:insert="~{layout :: siteHeader}"></div>
+
+  <main class="container">
+    <section class="movie-detail">
+      <div class="left">
+        <img th:if="${!#strings.isEmpty(movie.posterFilename)}" th:src="${movie.posterFilename}" ... />
+        <div th:if="${#strings.isEmpty(movie.posterFilename)}" class="no-poster big">No image</div>
+        
+      </div>
+      <div class="right">
+        <h1 th:text="${movie.title}">Title</h1>
+        <p class="meta">
+          <span th:text="${movie.year}">2020</span> •
+          <span th:text="${movie.genre}">Genre</span>
+        </p>
+        <p th:text="${movie.description}">Description</p>
+        <div class="actions">
+          <a th:href="@{/movies}">Back</a>
+          <span sec:authorize="hasRole('ADMIN')">
+            | <a th:href="@{|/movies/edit/${movie.id}|}">Edit</a>
+          </span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div th:insert="~{layout :: siteFooter}"></div>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - MovieApp</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+
+  <div th:insert="~{layout :: siteHeader}"></div>
+
+  <main class="container">
+    <div class="auth-card">
+      <h2>Login</h2>
+
+      <form th:action="@{/login}" method="post" class="form">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <label>Username
+          <!-- type explicit and required added; name must be "username" for Spring Security -->
+          <input type="text" name="username" required />
+        </label>
+
+        <label>Password
+          <!-- name must be "password" for Spring Security -->
+          <input type="password" name="password" required />
+        </label>
+
+        <div class="form-actions">
+          <button type="submit">Login</button>
+          <a th:href="@{/register}" class="btn-link">Register</a>
+        </div>
+      </form>
+
+      <p th:if="${param.error}" class="error">Invalid username or password</p>
+      <p th:if="${param.logout}" class="message">You have been logged out.</p>
+      <p th:if="${param.success}" class="message">Registration successful. Please login.</p>
+    </div>
+  </main>
+
+  <div th:insert="~{layout :: siteFooter}"></div>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${movie.id} != null ? 'Edit Movie' : 'Add Movie'">Movie Form</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+
+  <div th:insert="~{layout :: siteHeader}"></div>
+
+  <main class="container">
+    <section>
+      <h2 th:text="${movie.id} != null ? 'Edit Movie' : 'Add Movie'"></h2>
+
+      <form th:action="@{/movies/save}" th:object="${movie}" method="post"
+            enctype="multipart/form-data" class="form">
+
+        <input type="hidden" th:field="*{id}" />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <label>Title
+          <input type="text" th:field="*{title}" />
+        </label>
+        <div class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+
+        <label>Year
+          <input type="number" th:field="*{year}" />
+        </label>
+        <div class="error" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></div>
+
+        <label>Genre
+          <input type="text" th:field="*{genre}" />
+        </label>
+        <div class="error" th:if="${#fields.hasErrors('genre')}" th:errors="*{genre}"></div>
+
+        <label>Description
+          <textarea th:field="*{description}" rows="5"></textarea>
+        </label>
+        <div class="error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+
+        <label>Poster (optional)
+          <input type="file" name="poster" accept="image/*" />
+        </label>
+        <div class="error" th:if="${#fields.hasErrors('posterFilename')}" th:errors="*{posterFilename}"></div>
+
+        <div th:if="${movie.posterFilename}">
+          <img th:src="${movie.posterFilename}" alt="poster"
+               style="max-width:120px;margin-top:8px" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">Save</button>
+          <a th:href="@{/movies}" class="btn-link">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div th:insert="~{layout :: siteFooter}"></div>
+
+</body>
+</html>

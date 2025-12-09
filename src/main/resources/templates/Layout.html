@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8" />
+  <title>MovieApp</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+</head>
+<body>
+
+  <!-- HEADER FRAGMENT -->
+  <header class="site-header" th:fragment="siteHeader">
+    <div class="container header-inner">
+      <div class="brand">
+        <a th:href="@{/movies}">🎬 MovieApp</a>
+      </div>
+
+      <nav class="nav">
+        <a th:href="@{/movies}">Movies</a>
+        <span sec:authorize="hasRole('ADMIN')">
+          <a th:href="@{/movies/new}">Add Movie</a>
+        </span>
+      </nav>
+
+      <div class="auth">
+        <span sec:authorize="isAuthenticated()">
+          Hello, <strong sec:authentication="name"></strong>
+          <form th:action="@{/logout}" method="post" style="display:inline">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" style="background:none;border:none;padding:0;margin:0;cursor:pointer;">
+             Logout
+            </button>
+          </form>
+          
+        </span>
+        <span sec:authorize="!isAuthenticated()">
+          <a th:href="@{/login}">Login</a> |
+          <a th:href="@{/register}">Register</a>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- FOOTER FRAGMENT -->
+  <footer class="site-footer" th:fragment="siteFooter">
+    <div class="container">
+      <small>© <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> MovieApp</small>
+    </div>
+  </footer>
+
+</body>
+</html>
