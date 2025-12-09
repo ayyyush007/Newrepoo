@@ -40,3 +40,11 @@ build/
 *.iml
 .idea/
 .DS_Store
+/target/
+*.class
+*.log
+*.jar
+*.war
+*.iml
+.idea/
+/.DS_Store
