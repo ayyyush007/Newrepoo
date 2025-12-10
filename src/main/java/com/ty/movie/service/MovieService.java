@@ -1,30 +1,35 @@
 package com.ty.movie.service;
 
 import com.ty.movie.model.Movie;
-import com.ty.movie.repository.MovieRepository;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
-public class MovieService {
+public interface MovieService {
 
-    private final MovieRepository repo;
+    /**
+     * Paginated movie list. pageNo is 1-based.
+     */
+    Page<Movie> getPaginatedMovies(int pageNo, int pageSize, String sortField, String sortDir, String keyword);
 
-    public MovieService(MovieRepository repo) {
-        this.repo = repo;
-    }
+    // CRUD / helpers
+    Movie save(Movie movie);
 
-    public List<Movie> findAll() { return repo.findAll(); }
+    Movie saveMovie(Movie movie); // optional wrapper for older code
 
-    public Optional<Movie> findById(Long id) { return repo.findById(id); }
+    Optional<Movie> findById(Long id);
 
-    public Movie save(Movie movie) { return repo.save(movie); }
+    Optional<Movie> getMovieById(Long id); // optional wrapper
 
-    public void deleteById(Long id) { repo.deleteById(id); }
+    void deleteById(Long id);
 
-    public List<Movie> search(String keyword) {
-        return repo.findByTitleContainingIgnoreCase(keyword == null ? "" : keyword);
-    }
+    void deleteMovieById(Long id); // optional wrapper
+
+    List<Movie> getAllMovies();
+
+    /**
+     * Non-paginated search returning a List — kept for compatibility with controllers that call movieService.search(q).
+     */
+    List<Movie> search(String q);
 }
