@@ -5,38 +5,52 @@
   <meta charset="UTF-8" />
   <title>Login - MovieApp</title>
   <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
 </head>
 <body>
 
   <div th:insert="~{layout :: siteHeader}"></div>
 
-  <main class="container">
-    <div class="auth-card">
-      <h2>Login</h2>
+  <main class="container" role="main">
+    <section style="display:flex; justify-content:center; align-items:flex-start; min-height:60vh; padding-top:2.5rem;">
 
-      <form th:action="@{/login}" method="post" class="form">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+      <div class="movie-card" style="max-width:520px; width:100%; padding:1.3rem;">
+        <h2 style="margin:0 0 0.6rem 0;">Login</h2>
 
-        <label>Username
-          <!-- type explicit and required added; name must be "username" for Spring Security -->
-          <input type="text" name="username" required />
-        </label>
-
-        <label>Password
-          <!-- name must be "password" for Spring Security -->
-          <input type="password" name="password" required />
-        </label>
-
-        <div class="form-actions">
-          <button type="submit">Login</button>
-          <a th:href="@{/register}" class="btn-link">Register</a>
+        <!-- Show messages from Spring Security query params or flash attributes -->
+        <div th:if="${param.error}" role="alert" style="background:#fdecea;color:#b42318;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;">
+          Invalid username or password.
         </div>
-      </form>
 
-      <p th:if="${param.error}" class="error">Invalid username or password</p>
-      <p th:if="${param.logout}" class="message">You have been logged out.</p>
-      <p th:if="${param.success}" class="message">Registration successful. Please login.</p>
-    </div>
+        <div th:if="${param.logout}" role="status" style="background:#ecfdf5;color:#065f46;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;">
+          You have been logged out.
+        </div>
+
+        <div th:if="${success}" th:text="${success}" role="status" style="background:#ecfdf5;color:#065f46;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;"></div>
+        <div th:if="${error}" th:text="${error}" role="alert" style="background:#fdecea;color:#b42318;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;"></div>
+
+        <!-- Login form posts to Spring Security endpoint -->
+        <form th:action="@{/login}" method="post" style="display:flex;flex-direction:column;gap:0.75rem; margin-top:0.5rem;">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+          <label for="username" style="font-weight:600;">Username</label>
+          <input id="username" name="username" type="text" class="form-control" placeholder="Enter username" required autofocus />
+
+          <label for="password" style="font-weight:600; margin-top:0.25rem;">Password</label>
+          <input id="password" name="password" type="password" class="form-control" placeholder="Enter password" required />
+
+          <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:0.25rem;">
+            <button class="btn" type="submit">Login</button>
+            <a th:href="@{/register}" class="btn-link" style="margin-left:0.25rem;">Register</a>
+          </div>
+
+          <div style="margin-top:0.6rem; color:var(--muted); font-size:0.95rem;">
+            <small>If you don't have an account, click <a th:href="@{/register}">Register</a>.</small>
+          </div>
+        </form>
+      </div>
+
+    </section>
   </main>
 
   <div th:insert="~{layout :: siteFooter}"></div>

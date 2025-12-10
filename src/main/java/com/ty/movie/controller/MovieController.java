@@ -3,6 +3,7 @@ package com.ty.movie.controller;
 import com.ty.movie.model.Movie;
 import com.ty.movie.service.MovieService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -30,11 +31,31 @@ public class MovieController {
         this.movieService = movieService;
     }
 
-    // LIST MOVIES
+    // LIST MOVIES with pagination, sorting, search
     @GetMapping({"", "/"})
-    public String list(@RequestParam(required = false) String q, Model model) {
-        model.addAttribute("movies", movieService.search(q));
+    public String list(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size,
+            @RequestParam(value = "sortField", defaultValue = "title") String sortField,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir,
+            @RequestParam(value = "q", required = false) String q,
+            Model model) {
+
+        Page<Movie> moviePage = movieService.getPaginatedMovies(page, size, sortField, sortDir, q);
+
+        model.addAttribute("movies", moviePage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", moviePage.getTotalPages());
+        model.addAttribute("totalItems", moviePage.getTotalElements());
+
+        model.addAttribute("pageSize", size);
+        model.addAttribute("sortField", sortField);
+        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("reverseSortDir", sortDir.equals("asc") ? "desc" : "asc");
+
+        // search keyword
         model.addAttribute("q", q);
+
         return "movies/list";
     }
 
@@ -130,4 +151,5 @@ public class MovieController {
         ra.addFlashAttribute("success", "Movie deleted");
         return "redirect:/movies";
     }
+
 }

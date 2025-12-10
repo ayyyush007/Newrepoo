@@ -10,23 +10,75 @@
 
   <div th:insert="~{layout :: siteHeader}"></div>
 
-  <main class="container">
+  <main class="container" role="main">
     <section>
-      <div class="page-header">
-        <h1>Movies</h1>
-        <form class="search" th:action="@{/movies}" method="get">
-          <input type="text" name="q" th:value="${q}" placeholder="Search title..." />
-          <button type="submit">Search</button>
-        </form>
+      <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+        <div>
+          <h1>Movies</h1>
+          <p th:if="${totalItems != null}" th:text="'Total: ' + ${totalItems} + ' movies'"></p>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <!-- Search form (uses 'q' to match controller) -->
+          <form th:action="@{/movies}" method="get" class="mb-0" style="display:flex; gap:0.5rem; align-items:center;">
+            <label class="sr-only" for="search-q">Search movies</label>
+            <input id="search-q" type="text" name="q" th:value="${q}"
+                   placeholder="Search title, genre, director..." class="form-control"
+                   style="max-width:320px;"
+                   aria-label="Search movies by title, genre or director" />
+
+            <input type="hidden" name="sortField" th:value="${sortField}" />
+            <input type="hidden" name="sortDir" th:value="${sortDir}" />
+            <input type="hidden" name="size" th:value="${pageSize}" />
+
+            <button class="btn btn-primary" type="submit" aria-label="Search movies">Search</button>
+            <a th:href="@{/movies}" class="btn btn-secondary" role="button" aria-label="Reset search">Reset</a>
+          </form>
+
+          <!-- Sort quick links -->
+          <div style="display:flex; gap:0.5rem; align-items:center; margin-left:1rem;">
+            <span class="muted">Sort:</span>
+
+            <a class="btn btn-sm btn-outline-secondary"
+               th:href="@{/movies(page=1, size=${pageSize}, sortField='title', sortDir=${reverseSortDir}, q=${q})}"
+               th:attr="aria-pressed=${sortField == 'title'}"
+               aria-label="Sort by title">
+              Title
+              <span th:if="${sortField == 'title'}" th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
+            </a>
+
+            <a class="btn btn-sm btn-outline-secondary"
+               th:href="@{/movies(page=1, size=${pageSize}, sortField='year', sortDir=${reverseSortDir}, q=${q})}"
+               th:attr="aria-pressed=${sortField == 'year'}"
+               aria-label="Sort by year">
+              Year
+              <span th:if="${sortField == 'year'}" th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
+            </a>
+
+            <!-- Page size selector -->
+            <select onchange="location = this.value;" class="form-control" style="width:auto; display:inline-block;"
+                    aria-label="Select page size">
+              <option th:value="@{/movies(page=1, size=5, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
+                      th:selected="${pageSize == 5}">5</option>
+              <option th:value="@{/movies(page=1, size=8, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
+                      th:selected="${pageSize == 8}">8</option>
+              <option th:value="@{/movies(page=1, size=12, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
+                      th:selected="${pageSize == 12}">12</option>
+            </select>
+          </div>
+        </div>
       </div>
 
+      <!-- Movies grid -->
       <div class="movies-grid" th:if="${movies}">
         <div class="movie-card" th:each="m : ${movies}">
-          <a th:href="@{|/movies/view/${m.id}|}">
-            <div class="poster">
-              <img th:if="${!#strings.isEmpty(m.posterFilename)}" th:src="${m.posterFilename}" alt="poster" />
+          <a th:href="@{|/movies/view/${m.id}|}" th:attr="aria-label=${'View ' + m.title}">
+            <div class="poster" role="img" th:attr="aria-label=${m.title + ' poster'}">
+              <img th:if="${!#strings.isEmpty(m.posterFilename)}"
+                   th:src="@{${m.posterFilename}}"
+                   th:alt="${m.title + ' poster'}"
+                   loading="lazy" />
               <div th:if="${#strings.isEmpty(m.posterFilename)}" class="no-poster">No Image</div>
-              
             </div>
           </a>
 
@@ -38,11 +90,11 @@
             </p>
             <p class="desc" th:text="${#strings.abbreviate(m.description, 120)}"></p>
 
-            <div class="actions">
-              <a th:href="@{|/movies/view/${m.id}|}">View</a>
+            <div class="actions" role="group" aria-label="Movie actions">
+              <a th:href="@{|/movies/view/${m.id}|}" aria-label="View details of this movie">View</a>
               <span sec:authorize="hasRole('ADMIN')">
-                | <a th:href="@{|/movies/edit/${m.id}|}">Edit</a>
-                | <a th:href="@{|/movies/delete/${m.id}|}" onclick="return confirm('Delete?')">Delete</a>
+                | <a th:href="@{|/movies/edit/${m.id}|}" aria-label="Edit this movie">Edit</a>
+                | <a th:href="@{|/movies/delete/${m.id}|}" onclick="return confirm('Delete?')" aria-label="Delete this movie">Delete</a>
               </span>
             </div>
           </div>
@@ -52,6 +104,48 @@
       <div th:if="${movies == null or #lists.isEmpty(movies)}">
         <p>No movies found.</p>
       </div>
+
+      <!-- Pagination controls -->
+      <div th:if="${totalPages != null and totalPages > 1}" style="margin-top:1.5rem;">
+        <nav aria-label="Page navigation" role="navigation">
+          <ul class="pagination" style="display:flex; gap:0.25rem; justify-content:center; flex-wrap:wrap;">
+
+            <!-- Previous -->
+            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+              <a class="page-link"
+                 th:href="@{/movies(page=${currentPage-1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
+                 aria-label="Previous page">
+                &laquo; Prev
+              </a>
+            </li>
+
+            <!-- Page numbers: show a compact window -->
+            <li th:each="i : ${#numbers.sequence(1, totalPages)}"
+                th:if="${(i <= 2) || (i > totalPages - 2) || (i >= currentPage-2 && i <= currentPage+2)}"
+                th:classappend="${i == currentPage} ? 'active'" class="page-item">
+              <a class="page-link"
+                 th:href="@{/movies(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
+                 th:text="${i}"
+                 th:attr="aria-current=${i == currentPage ? 'page' : null}"
+                 aria-label="Go to page ${i}">1</a>
+            </li>
+
+            <!-- Next -->
+            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+              <a class="page-link"
+                 th:href="@{/movies(page=${currentPage+1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
+                 aria-label="Next page">
+                Next &raquo;
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="text-center" style="margin-top:0.5rem;">
+          <small th:text="'Showing page ' + ${currentPage} + ' of ' + ${totalPages} + ' — total ' + ${totalItems} + ' movies'"></small>
+        </div>
+      </div>
+
     </section>
   </main>
 

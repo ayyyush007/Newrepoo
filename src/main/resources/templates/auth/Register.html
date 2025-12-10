@@ -1,40 +1,93 @@
-<!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-  <meta charset="utf-8"/>
-  <title>Register</title>
+  <meta charset="UTF-8" />
+  <title>Register - MovieApp</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <style>
+    /* tiny inline tweaks to match login look */
+    .movie-card { max-width:520px; margin:0 auto; }
+    .btn { background:var(--primary); color:#fff; border-radius:8px; padding:8px 12px; border:none; cursor:pointer; }
+    .btn[disabled]{ opacity:0.6; cursor:not-allowed; }
+    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.2); border-top-color:rgba(255,255,255,0.9); border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-left:8px;}
+    @keyframes spin{ to{ transform:rotate(360deg); } }
+  </style>
 </head>
 <body>
+
   <div th:insert="~{layout :: siteHeader}"></div>
 
-  <main class="container">
-    <div class="auth-card">
-      <h2>Register</h2>
+  <main class="container" role="main">
+    <section style="display:flex; justify-content:center; align-items:flex-start; min-height:60vh; padding-top:2.5rem;">
 
-      <div th:if="${error}" class="error" th:text="${error}"></div>
+      <div class="movie-card" style="width:100%; padding:1.3rem;">
+        <h2 style="margin:0 0 0.6rem 0;">Create account</h2>
+        <p style="margin:0 0 1rem 0; color:var(--muted);">Join MovieApp — manage your movie collection and enjoy.</p>
 
-      <form th:action="@{/register}" th:object="${user}" method="post" class="form">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-        <label>Username
-          <input th:field="*{username}" type="text" required />
-        </label>
-        <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="error"></div>
-
-        <label>Password
-          <input th:field="*{password}" type="password" required minlength="6" />
-        </label>
-        <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error"></div>
-
-        <div class="form-actions">
-          <button type="submit">Register</button>
-          <a th:href="@{/login}" class="btn-link">Back to login</a>
+        <!-- Flash messages from controller -->
+        <div th:if="${success}" class="alert-success" th:text="${success}" style="margin-bottom:0.8rem;"></div>
+        <div th:if="${error}" class="alert" th:text="${error}" style="margin-bottom:0.8rem;"></div>
+        <div th:if="${param.error}" class="alert" role="alert" style="margin-bottom:0.8rem;">
+          Registration failed — check inputs.
         </div>
-      </form>
-    </div>
+
+        <!-- Plain, robust register form (no th:object) -->
+        <form th:action="@{/register}" method="post" id="registerForm" style="display:flex;flex-direction:column;gap:0.75rem; margin-top:0.2rem;">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+          <label for="username" style="font-weight:600;">Username</label>
+          <input id="username" name="username" type="text" class="form-control" placeholder="Choose a username" required autofocus />          
+
+          <label for="password" style="font-weight:600; margin-top:0.25rem;">Password</label>
+          <input id="password" name="password" type="password" class="form-control" placeholder="Create a password" required />
+
+          <label for="confirmPassword" style="font-weight:600; margin-top:0.25rem;">Confirm password</label>
+          <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" placeholder="Repeat your password" required />
+
+          <!-- Hidden role (server should ignore/change as needed) -->
+          <input type="hidden" name="role" value="ROLE_USER" />
+
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
+            <button type="submit" id="registerBtn" class="btn" aria-label="Register account">Register</button>
+            <a th:href="@{/login}" class="btn-link" style="margin-left:0.4rem;">Back to login</a>
+            <span id="spinner" style="display:none;"><span class="spinner"></span></span>
+          </div>
+        </form>
+
+      </div>
+
+    </section>
   </main>
 
   <div th:insert="~{layout :: siteFooter}"></div>
+
+  <script>
+    // prevent double-submit and show spinner
+    (function(){
+      const form = document.getElementById('registerForm');
+      const btn = document.getElementById('registerBtn');
+      const spinnerWrap = document.getElementById('spinner');
+
+      if(!form) return;
+
+      form.addEventListener('submit', function(e){
+        // basic client-side validation for matching passwords
+        const pwd = document.getElementById('password').value || '';
+        const cpwd = document.getElementById('confirmPassword').value || '';
+        if (pwd !== cpwd) {
+          e.preventDefault();
+          alert('Passwords do not match.');
+          return;
+        }
+
+        // disable to avoid multi-click
+        btn.disabled = true;
+        spinnerWrap.style.display = 'inline-block';
+      });
+    })();
+  </script>
+
 </body>
 </html>
