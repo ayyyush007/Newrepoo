@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Your Profile - MovieApp</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <style>
+        body {
+            background: linear-gradient(180deg, #1a1a1a, #111);
+            color: white;
+            min-height: 100vh;
+        }
+        .profile-card {
+            max-width: 520px;
+            width: 100%;
+            margin: 3rem auto;
+            padding: 1.5rem;
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 12px;
+            background: linear-gradient(135deg,#60a5fa,#1e40af);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:32px;
+            font-weight:700;
+        }
+        .btn-primary {
+            background:#4f46e5;
+            color:white;
+            padding:0.5rem 1rem;
+            border-radius:6px;
+            text-decoration:none;
+            font-weight:600;
+            display:inline-block;
+        }
+        .btn-primary:hover {
+            background:#4338ca;
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:insert="~{layout :: siteHeader}"></div>
+
+<main class="container" role="main">
+
+    <div class="profile-card">
+
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="avatar"
+                 th:text="${username != null ? username.substring(0,1).toUpperCase() : 'U'}">
+            </div>
+
+            <div>
+                <h2 style="margin:0;" th:text="${username}">Username</h2>
+                <p style="opacity:0.7; margin:0;" th:text="'User ID: ' + ${userId}">User ID</p>
+            </div>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,0.15); margin:1.5rem 0;" />
+
+        <div style="display:flex; flex-direction:column; gap:0.75rem;">
+
+            <!-- Only admins can see the admin panel link -->
+            <a sec:authorize="hasRole('ADMIN')"
+               class="btn-primary"
+               th:href="@{/movies}">
+               Admin Dashboard
+            </a>
+
+            <!-- Normal link -->
+            <a class="btn-primary" th:href="@{/movies}">
+                View Movies
+            </a>
+
+            <!-- Logout -->
+            <form th:action="@{/logout}" method="post" style="margin-top:0.5rem;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <button type="submit" class="btn-primary" style="width:100%; text-align:center;">
+                    Logout
+                </button>
+            </form>
+
+        </div>
+
+    </div>
+
+</main>
+
+<div th:insert="~{layout :: siteFooter}"></div>
+
+</body>
+</html>

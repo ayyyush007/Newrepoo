@@ -3,147 +3,215 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
-  <title>Movies - MovieApp</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <title>Movies — MovieApp</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --accent: #e50914;
+      --panel-bg: rgba(0,0,0,0.62);
+      --panel-border: rgba(255,255,255,0.06);
+      --muted: rgba(255,255,255,0.75);
+      --card-bg: rgba(255,255,255,0.02);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%; margin:0;}
+    body{
+      background: #000;
+      color:#fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* shared cinematic background - same as login */
+    .bg {
+      position: fixed; inset: 0;
+      background-image: url('/images/login-bg.jpg');
+      background-size: cover; background-position: center center;
+      filter: saturate(0.95) contrast(0.9);
+      z-index: 0;
+    }
+    .bg::after{
+      content:""; position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.66) 100%);
+      pointer-events:none;
+    }
+    .vignette { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%); z-index: 1; pointer-events: none; }
+
+    /* page container */
+    .page { position: relative; z-index: 2; min-height:100vh; padding: 56px 20px; box-sizing:border-box; }
+
+    /* translucent main panel */
+    .panel {
+      max-width:1200px;
+      margin: 0 auto;
+      background: var(--panel-bg);
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      padding: 20px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      backdrop-filter: blur(6px);
+    }
+
+    .panel-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+      margin-bottom:1rem;
+    }
+
+    .page-title { font-size:1.6rem; margin:0; color:#fff; }
+    .subtle { color:var(--muted); font-size:0.95rem; margin-top:4px; }
+
+    /* search / controls */
+    .controls { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+    .form-control { padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.02); color:#fff; }
+    .btn { padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:700; border:none; }
+    .btn-primary { background: var(--accent); color:#fff; }
+    .btn-secondary { background: transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.06); }
+
+    /* grid */
+    .movies-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .movie-card {
+      background: var(--card-bg);
+      border-radius:10px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.04);
+      display:flex;
+      flex-direction:column;
+    }
+
+    .poster { width:100%; height:300px; background:#111; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .poster img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .movie-body { padding:12px 14px; color: #fff; display:flex; flex-direction:column; gap:8px; flex:1; }
+    .movie-body h3 { margin:0; font-size:1.05rem; color:#fff; }
+    .meta { color: var(--muted); font-size:0.9rem; margin:0; }
+    .desc { color: var(--muted); font-size:0.9rem; margin-top:6px; flex:1; }
+
+    .actions { margin-top:8px; font-size:0.95rem; color:var(--muted); }
+    .actions a { color:#fff; text-decoration:underline; margin-right:8px; }
+
+    /* pagination */
+    .pagination { display:flex; gap:8px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+    .page-item { list-style:none; }
+    .page-link { padding:8px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:#fff; text-decoration:none; display:inline-block; }
+    .page-item.disabled .page-link { opacity:0.4; pointer-events:none; }
+    .page-item.active .page-link { background: rgba(255,255,255,0.06); box-shadow: inset 0 -4px 0 rgba(255,255,255,0.03); }
+
+    .center { text-align:center; color:var(--muted); margin-top:12px; }
+
+    @media (max-width:820px){
+      .poster { height:220px; }
+    }
+    @media (max-width:480px){
+      .poster { height:200px; }
+      .panel { padding:14px; }
+    }
+  </style>
 </head>
 <body>
 
+  <div class="bg" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
   <div th:insert="~{layout :: siteHeader}"></div>
 
-  <main class="container" role="main">
-    <section>
-      <div class="page-header" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+  <main class="page" role="main">
+    <section class="panel" aria-labelledby="moviesTitle">
+
+      <div class="panel-header">
         <div>
-          <h1>Movies</h1>
-          <p th:if="${totalItems != null}" th:text="'Total: ' + ${totalItems} + ' movies'"></p>
+          <h1 id="moviesTitle" class="page-title">Movies</h1>
+          <div class="subtle" th:if="${totalItems != null}" th:text="'Total: ' + ${totalItems} + ' movies'"></div>
         </div>
 
-        <div style="display:flex; align-items:center; gap:0.5rem;">
-          <!-- Search form (uses 'q' to match controller) -->
-          <form th:action="@{/movies}" method="get" class="mb-0" style="display:flex; gap:0.5rem; align-items:center;">
-            <label class="sr-only" for="search-q">Search movies</label>
-            <input id="search-q" type="text" name="q" th:value="${q}"
-                   placeholder="Search title, genre, director..." class="form-control"
-                   style="max-width:320px;"
-                   aria-label="Search movies by title, genre or director" />
-
+        <div class="controls">
+          <form th:action="@{/movies}" method="get" style="display:flex; gap:0.5rem; align-items:center;">
+            <input type="text" name="q" th:value="${q}" placeholder="Search title, genre, director..." class="form-control" style="min-width:220px;" />
             <input type="hidden" name="sortField" th:value="${sortField}" />
             <input type="hidden" name="sortDir" th:value="${sortDir}" />
             <input type="hidden" name="size" th:value="${pageSize}" />
-
-            <button class="btn btn-primary" type="submit" aria-label="Search movies">Search</button>
-            <a th:href="@{/movies}" class="btn btn-secondary" role="button" aria-label="Reset search">Reset</a>
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a th:href="@{/movies}" class="btn btn-secondary" style="margin-left:6px;">Reset</a>
           </form>
 
-          <!-- Sort quick links -->
-          <div style="display:flex; gap:0.5rem; align-items:center; margin-left:1rem;">
-            <span class="muted">Sort:</span>
-
-            <a class="btn btn-sm btn-outline-secondary"
-               th:href="@{/movies(page=1, size=${pageSize}, sortField='title', sortDir=${reverseSortDir}, q=${q})}"
-               th:attr="aria-pressed=${sortField == 'title'}"
-               aria-label="Sort by title">
-              Title
-              <span th:if="${sortField == 'title'}" th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
+          <div style="display:flex; align-items:center; gap:0.5rem; margin-left:6px;">
+            <label style="color:var(--muted); font-weight:600;">Sort</label>
+            <a class="btn btn-secondary" th:href="@{/movies(page=1, size=${pageSize}, sortField='title', sortDir=${reverseSortDir}, q=${q})}">
+              Title <span th:if="${sortField == 'title'}" th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
+            </a>
+            <a class="btn btn-secondary" th:href="@{/movies(page=1, size=${pageSize}, sortField='year', sortDir=${reverseSortDir}, q=${q})}">
+              Year <span th:if="${sortField == 'year'}" th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
             </a>
 
-            <a class="btn btn-sm btn-outline-secondary"
-               th:href="@{/movies(page=1, size=${pageSize}, sortField='year', sortDir=${reverseSortDir}, q=${q})}"
-               th:attr="aria-pressed=${sortField == 'year'}"
-               aria-label="Sort by year">
-              Year
-              <span th:if="${sortField == 'year'}" th:text="${sortDir == 'asc' ? '▲' : '▼'}"></span>
-            </a>
-
-            <!-- Page size selector -->
-            <select onchange="location = this.value;" class="form-control" style="width:auto; display:inline-block;"
-                    aria-label="Select page size">
-              <option th:value="@{/movies(page=1, size=5, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
-                      th:selected="${pageSize == 5}">5</option>
-              <option th:value="@{/movies(page=1, size=8, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
-                      th:selected="${pageSize == 8}">8</option>
-              <option th:value="@{/movies(page=1, size=12, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
-                      th:selected="${pageSize == 12}">12</option>
+            <select onchange="location = this.value;" class="form-control" style="background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; padding:8px; border-radius:6px;">
+              <option th:value="@{/movies(page=1, size=5, sortField=${sortField}, sortDir=${sortDir}, q=${q})}" th:selected="${pageSize == 5}">5</option>
+              <option th:value="@{/movies(page=1, size=8, sortField=${sortField}, sortDir=${sortDir}, q=${q})}" th:selected="${pageSize == 8}">8</option>
+              <option th:value="@{/movies(page=1, size=12, sortField=${sortField}, sortDir=${sortDir}, q=${q})}" th:selected="${pageSize == 12}">12</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- Movies grid -->
+      <!-- movies grid -->
       <div class="movies-grid" th:if="${movies}">
         <div class="movie-card" th:each="m : ${movies}">
-          <a th:href="@{|/movies/view/${m.id}|}" th:attr="aria-label=${'View ' + m.title}">
-            <div class="poster" role="img" th:attr="aria-label=${m.title + ' poster'}">
-              <img th:if="${!#strings.isEmpty(m.posterFilename)}"
-                   th:src="@{${m.posterFilename}}"
-                   th:alt="${m.title + ' poster'}"
-                   loading="lazy" />
-              <div th:if="${#strings.isEmpty(m.posterFilename)}" class="no-poster">No Image</div>
+          <a th:href="@{|/movies/view/${m.id}|}">
+            <div class="poster">
+              <img th:if="${!#strings.isEmpty(m.posterFilename)}" th:src="@{${m.posterFilename}}" alt="poster" />
+              <div th:if="${#strings.isEmpty(m.posterFilename)}" style="color:var(--muted); padding:12px;">No Image</div>
             </div>
           </a>
 
           <div class="movie-body">
             <h3 th:text="${m.title}">Title</h3>
-            <p class="meta">
-              <span th:text="${m.year}">2020</span> •
-              <span th:text="${m.genre}">Genre</span>
-            </p>
+            <p class="meta"><span th:text="${m.year}">2020</span> • <span th:text="${m.genre}">Genre</span></p>
             <p class="desc" th:text="${#strings.abbreviate(m.description, 120)}"></p>
 
-            <div class="actions" role="group" aria-label="Movie actions">
-              <a th:href="@{|/movies/view/${m.id}|}" aria-label="View details of this movie">View</a>
+            <div class="actions">
+              <a th:href="@{|/movies/view/${m.id}|}">View</a>
               <span sec:authorize="hasRole('ADMIN')">
-                | <a th:href="@{|/movies/edit/${m.id}|}" aria-label="Edit this movie">Edit</a>
-                | <a th:href="@{|/movies/delete/${m.id}|}" onclick="return confirm('Delete?')" aria-label="Delete this movie">Delete</a>
+                | <a th:href="@{|/movies/edit/${m.id}|}">Edit</a>
+                | <a th:href="@{|/movies/delete/${m.id}|}" onclick="return confirm('Delete?')">Delete</a>
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div th:if="${movies == null or #lists.isEmpty(movies)}">
+      <div th:if="${movies == null or #lists.isEmpty(movies)}" class="center">
         <p>No movies found.</p>
       </div>
 
-      <!-- Pagination controls -->
-      <div th:if="${totalPages != null and totalPages > 1}" style="margin-top:1.5rem;">
-        <nav aria-label="Page navigation" role="navigation">
-          <ul class="pagination" style="display:flex; gap:0.25rem; justify-content:center; flex-wrap:wrap;">
+      <!-- pagination -->
+      <div th:if="${totalPages != null and totalPages > 1}">
+        <ul class="pagination" role="navigation" aria-label="Pagination">
+          <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+            <a class="page-link" th:href="@{/movies(page=${currentPage-1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}">&laquo; Prev</a>
+          </li>
 
-            <!-- Previous -->
-            <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-              <a class="page-link"
-                 th:href="@{/movies(page=${currentPage-1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
-                 aria-label="Previous page">
-                &laquo; Prev
-              </a>
-            </li>
+          <li th:each="i : ${#numbers.sequence(1, totalPages)}"
+              th:if="${(i <= 2) || (i > totalPages - 2) || (i >= currentPage-2 && i <= currentPage+2)}"
+              th:classappend="${i == currentPage} ? 'active'" class="page-item">
+            <a class="page-link" th:href="@{/movies(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}" th:text="${i}">1</a>
+          </li>
 
-            <!-- Page numbers: show a compact window -->
-            <li th:each="i : ${#numbers.sequence(1, totalPages)}"
-                th:if="${(i <= 2) || (i > totalPages - 2) || (i >= currentPage-2 && i <= currentPage+2)}"
-                th:classappend="${i == currentPage} ? 'active'" class="page-item">
-              <a class="page-link"
-                 th:href="@{/movies(page=${i}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
-                 th:text="${i}"
-                 th:attr="aria-current=${i == currentPage ? 'page' : null}"
-                 aria-label="Go to page ${i}">1</a>
-            </li>
+          <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+            <a class="page-link" th:href="@{/movies(page=${currentPage+1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}">Next &raquo;</a>
+          </li>
+        </ul>
 
-            <!-- Next -->
-            <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-              <a class="page-link"
-                 th:href="@{/movies(page=${currentPage+1}, size=${pageSize}, sortField=${sortField}, sortDir=${sortDir}, q=${q})}"
-                 aria-label="Next page">
-                Next &raquo;
-              </a>
-            </li>
-          </ul>
-        </nav>
-
-        <div class="text-center" style="margin-top:0.5rem;">
-          <small th:text="'Showing page ' + ${currentPage} + ' of ' + ${totalPages} + ' — total ' + ${totalItems} + ' movies'"></small>
-        </div>
+        <div class="center" th:text="'Showing page ' + ${currentPage} + ' of ' + ${totalPages} + ' — total ' + ${totalItems} + ' movies'"></div>
       </div>
 
     </section>

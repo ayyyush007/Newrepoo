@@ -3,57 +3,174 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
-  <title>Login - MovieApp</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <title>Sign in — MovieApp</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --accent: #e50914;
+      --panel-bg: rgba(0,0,0,0.62);
+      --panel-border: rgba(255,255,255,0.06);
+      --input-bg: rgba(255,255,255,0.03);
+      --input-border: rgba(255,255,255,0.18);
+      --input-text: #fff;
+      --muted: rgba(255,255,255,0.7);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%; margin:0;}
+    body{
+      min-height:100vh;
+      background-color:#000;
+      color: #fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:block;
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      background-image: url('/images/login-bg.jpg');
+      background-size: cover;
+      background-position: center center;
+      filter: saturate(0.95) contrast(0.9);
+      z-index: 0;
+    }
+    .bg::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.66) 100%);
+      pointer-events:none;
+    }
+    .vignette { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%); z-index: 1; pointer-events: none; }
+
+    .page { position: relative; z-index: 2; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding: 48px 16px; }
+
+    .signin-panel {
+      width:100%;
+      max-width:460px;
+      background: var(--panel-bg);
+      border-radius: 10px;
+      padding: 36px 36px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(6px);
+    }
+
+    .signin-panel h1 { margin:0 0 10px 0; font-size:28px; letter-spacing:-0.3px; color:#fff; }
+    .signin-panel p.lead { margin:0 0 20px 0; color:var(--muted); }
+
+    .field { margin-bottom:14px; display:block; }
+    .field input[type="text"], .field input[type="password"] {
+      width:100%;
+      padding:14px 14px;
+      background: var(--input-bg);
+      color: var(--input-text);
+      border-radius:6px;
+      border:1px solid var(--input-border);
+      font-size:15px;
+      box-sizing:border-box;
+      transition: box-shadow .12s, border-color .12s, transform .12s;
+    }
+    .field input::placeholder { color: rgba(255,255,255,0.5); }
+    .field input:focus { outline: none; border-color: rgba(255,255,255,0.36); box-shadow: 0 6px 18px rgba(0,0,0,0.6); transform: translateY(-1px); }
+
+    .pwd-row { position:relative; }
+    .pwd-toggle { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:rgba(255,255,255,0.85); cursor:pointer; padding:6px;border-radius:6px; }
+    .pwd-toggle:focus{ outline:none; box-shadow: 0 0 0 4px rgba(255,255,255,0.06); }
+
+    .row-between { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
+    .remember { display:flex; align-items:center; gap:8px; color:var(--muted); font-weight:600; }
+    .remember input { width:16px; height:16px; accent-color:var(--accent); }
+
+    .btn-primary { display:inline-block; width:100%; background: var(--accent); color: #fff; border: none; padding:13px 14px; border-radius:6px; font-weight:700; font-size:15px; cursor:pointer; margin-top:12px; transition: transform .12s, box-shadow .12s, background .12s; }
+    .btn-primary:hover{ transform: translateY(-2px); background: #ff2d25; box-shadow: 0 18px 38px rgba(229,9,20,0.16); }
+
+    .links { margin-top:14px; text-align:center; color:var(--muted); }
+    .links a { color: #fff; text-decoration:underline; font-weight:600; margin-left:6px; }
+
+    .alert { margin-bottom:12px; padding:10px 12px; border-radius:6px; color:#ffd6d6; background: rgba(255,80,80,0.12); border-left: 4px solid rgba(255,80,80,0.9); }
+    .alert-success { margin-bottom:12px; padding:10px 12px; border-radius:6px; color:#c6ffd7; background: rgba(0,160,80,0.06); border-left: 4px solid rgba(0,160,80,0.9); }
+
+    @media (max-width:720px){ .page{ padding:28px 14px; } .signin-panel{ padding:22px; max-width:420px; } }
+    @media (max-width:420px){ .signin-panel{ padding:18px; border-radius:8px; } .btn-primary{ font-size:15px; padding:12px; } }
+  </style>
 </head>
 <body>
 
+  <!-- background image -->
+  <div class="bg" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- header from layout fragment -->
   <div th:insert="~{layout :: siteHeader}"></div>
 
-  <main class="container" role="main">
-    <section style="display:flex; justify-content:center; align-items:flex-start; min-height:60vh; padding-top:2.5rem;">
+  <div class="page" role="main">
+    <div class="signin-panel" role="region" aria-labelledby="signinTitle">
+      <h1 id="signinTitle">Sign In</h1>
+      <p class="lead muted">Sign in to your MovieApp account to manage and view movies.</p>
 
-      <div class="movie-card" style="max-width:520px; width:100%; padding:1.3rem;">
-        <h2 style="margin:0 0 0.6rem 0;">Login</h2>
+      <!-- Alerts -->
+      <div th:if="${param.error}" class="alert" role="alert">Invalid username or password.</div>
+      <div th:if="${param.logout}" class="alert-success" role="status">You have been logged out.</div>
+      <div th:if="${error}" class="alert" th:text="${error}" role="alert"></div>
+      <div th:if="${success}" class="alert-success" th:text="${success}" role="status"></div>
 
-        <!-- Show messages from Spring Security query params or flash attributes -->
-        <div th:if="${param.error}" role="alert" style="background:#fdecea;color:#b42318;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;">
-          Invalid username or password.
+      <!-- LOGIN FORM (username placeholder requested) -->
+      <form th:action="@{/login}" method="post" autocomplete="on" style="margin-top:10px;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <label class="field">
+          <input name="username" type="text" placeholder="Username" class="field-input" required
+                 style="width:100%; padding:14px; border-radius:6px; background:transparent; border:1px solid rgba(255,255,255,0.18); color:#fff; font-size:15px;" />
+        </label>
+
+        <label class="field pwd-row">
+          <input name="password" type="password" class="field-input" placeholder="Password" required
+                 style="width:100%; padding:14px; border-radius:6px; background:transparent; border:1px solid rgba(255,255,255,0.18); color:#fff; font-size:15px;" id="password" />
+          <button type="button" class="pwd-toggle" id="pwdToggle" aria-pressed="false" aria-label="Show password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="rgba(255,255,255,0.7)" stroke-width="1.3"></path>
+              <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.7)" stroke-width="1.3"></circle>
+            </svg>
+          </button>
+        </label>
+
+        <div class="row-between" style="margin-top:10px;">
+          <label class="remember">
+            <input type="checkbox" name="remember-me" />
+            Remember me
+          </label>
+
+          <a th:href="@{/forgot-password}" style="color:var(--muted); text-decoration:underline;">Forgot password?</a>
         </div>
 
-        <div th:if="${param.logout}" role="status" style="background:#ecfdf5;color:#065f46;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;">
-          You have been logged out.
+        <button type="submit" class="btn-primary">Sign In</button>
+
+        <div class="links">
+          <small>New to MovieApp? <a th:href="@{/register}" style="color:#fff; font-weight:700;">Sign up now.</a></small>
         </div>
-
-        <div th:if="${success}" th:text="${success}" role="status" style="background:#ecfdf5;color:#065f46;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;"></div>
-        <div th:if="${error}" th:text="${error}" role="alert" style="background:#fdecea;color:#b42318;padding:0.6rem 0.9rem;border-radius:8px;margin-bottom:0.8rem;"></div>
-
-        <!-- Login form posts to Spring Security endpoint -->
-        <form th:action="@{/login}" method="post" style="display:flex;flex-direction:column;gap:0.75rem; margin-top:0.5rem;">
-          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-          <label for="username" style="font-weight:600;">Username</label>
-          <input id="username" name="username" type="text" class="form-control" placeholder="Enter username" required autofocus />
-
-          <label for="password" style="font-weight:600; margin-top:0.25rem;">Password</label>
-          <input id="password" name="password" type="password" class="form-control" placeholder="Enter password" required />
-
-          <div style="display:flex; align-items:center; justify-content:flex-start; gap:0.75rem; margin-top:0.25rem;">
-            <button class="btn" type="submit">Login</button>
-            <a th:href="@{/register}" class="btn-link" style="margin-left:0.25rem;">Register</a>
-          </div>
-
-          <div style="margin-top:0.6rem; color:var(--muted); font-size:0.95rem;">
-            <small>If you don't have an account, click <a th:href="@{/register}">Register</a>.</small>
-          </div>
-        </form>
-      </div>
-
-    </section>
-  </main>
+      </form>
+    </div>
+  </div>
 
   <div th:insert="~{layout :: siteFooter}"></div>
+
+  <script>
+    (function(){
+      const pwd = document.getElementById('password');
+      const t = document.getElementById('pwdToggle');
+      if(!pwd || !t) return;
+      t.addEventListener('click', function(){
+        const show = pwd.type === 'password';
+        pwd.type = show ? 'text' : 'password';
+        t.setAttribute('aria-pressed', String(show));
+        t.title = show ? 'Hide password' : 'Show password';
+      });
+    })();
+  </script>
 
 </body>
 </html>

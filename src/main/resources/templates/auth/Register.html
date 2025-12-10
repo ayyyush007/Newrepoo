@@ -3,91 +3,202 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8" />
-  <title>Register - MovieApp</title>
+  <title>Register — MovieApp</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    /* tiny inline tweaks to match login look */
-    .movie-card { max-width:520px; margin:0 auto; }
-    .btn { background:var(--primary); color:#fff; border-radius:8px; padding:8px 12px; border:none; cursor:pointer; }
-    .btn[disabled]{ opacity:0.6; cursor:not-allowed; }
-    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.2); border-top-color:rgba(255,255,255,0.9); border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-left:8px;}
-    @keyframes spin{ to{ transform:rotate(360deg); } }
+    :root{
+      --accent: #e50914;
+      --panel-bg: rgba(0,0,0,0.62);
+      --panel-border: rgba(255,255,255,0.06);
+      --input-bg: rgba(255,255,255,0.03);
+      --input-border: rgba(255,255,255,0.18);
+      --input-text: #fff;
+      --muted: rgba(255,255,255,0.7);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%; margin:0;}
+    body{
+      min-height:100vh;
+      background-color:#000;
+      color: #fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:block;
+    }
+
+    /* Background image (same as login). Place your hero image at /static/images/login-bg.jpg */
+    .bg {
+      position: fixed; inset: 0;
+      background-image: url('/images/login-bg.jpg');
+      background-size: cover; background-position: center center;
+      filter: saturate(0.95) contrast(0.9);
+      z-index: 0;
+    }
+    .bg::after{
+      content:""; position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.66) 100%);
+      pointer-events:none;
+    }
+    .vignette { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%); z-index: 1; pointer-events: none; }
+
+    .page { position: relative; z-index: 2; display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding: 48px 16px; }
+
+    .panel {
+      width:100%;
+      max-width:520px;
+      background: var(--panel-bg);
+      border-radius: 10px;
+      padding: 34px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+      border: 1px solid var(--panel-border);
+      backdrop-filter: blur(6px);
+    }
+
+    .panel h1 { margin:0 0 8px 0; font-size:26px; color:#fff; }
+    .panel p.lead { margin:0 0 18px 0; color:var(--muted); }
+
+    .field { margin-bottom:14px; display:block; }
+    .field input[type="text"], .field input[type="password"], .field input[type="email"] {
+      width:100%;
+      padding:14px;
+      border-radius:6px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      font-size:15px;
+      box-sizing:border-box;
+      transition: box-shadow .12s, border-color .12s, transform .12s;
+    }
+    .field input::placeholder { color: rgba(255,255,255,0.48); }
+    .field input:focus { outline:none; border-color: rgba(255,255,255,0.36); box-shadow: 0 6px 18px rgba(0,0,0,0.6); transform: translateY(-1px); }
+
+    .pwd-row { position:relative; }
+    .pwd-toggle {
+      position:absolute; right:8px; top:50%; transform:translateY(-50%);
+      background:transparent; border:none; color:rgba(255,255,255,0.85); cursor:pointer; padding:6px;border-radius:6px;
+    }
+    .pwd-toggle:focus{ outline:none; box-shadow: 0 0 0 4px rgba(255,255,255,0.06); }
+
+    .row-between { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:6px; }
+    .remember { display:flex; align-items:center; gap:8px; color:var(--muted); font-weight:600; }
+    .remember input { width:16px; height:16px; accent-color:var(--accent); }
+
+    .btn-primary { display:inline-block; width:100%; background: var(--accent); color: #fff; border: none; padding:13px; border-radius:6px; font-weight:700; font-size:15px; cursor:pointer; margin-top:12px; transition: transform .12s, box-shadow .12s, background .12s; box-shadow:0 18px 36px rgba(229,9,20,0.12); }
+    .btn-primary:hover{ transform: translateY(-2px); background:#ff2d25; }
+
+    .links { margin-top:14px; text-align:center; color:var(--muted); }
+    .links a { color: #fff; text-decoration:underline; font-weight:600; margin-left:6px; }
+
+    .alert { margin-bottom:12px; padding:10px 12px; border-radius:6px; color:#ffd6d6; background: rgba(255,80,80,0.12); border-left: 4px solid rgba(255,80,80,0.9); }
+    .alert-success { margin-bottom:12px; padding:10px 12px; border-radius:6px; color:#c6ffd7; background: rgba(0,160,80,0.06); border-left: 4px solid rgba(0,160,80,0.9); }
+
+    .note { color:var(--muted); font-size:0.95rem; margin-top:8px; }
+
+    @media (max-width:720px){ .page{ padding:28px 14px; } .panel{ padding:22px; max-width:420px; } }
+    @media (max-width:420px){ .panel{ padding:16px; } .btn-primary{ padding:12px; } }
   </style>
 </head>
 <body>
 
+  <div class="bg" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
   <div th:insert="~{layout :: siteHeader}"></div>
 
-  <main class="container" role="main">
-    <section style="display:flex; justify-content:center; align-items:flex-start; min-height:60vh; padding-top:2.5rem;">
+  <main class="page" role="main">
+    <section class="panel" role="region" aria-labelledby="registerTitle">
+      <h1 id="registerTitle">Create account</h1>
+      <p class="lead muted">Sign up for MovieApp to manage your movie collection.</p>
 
-      <div class="movie-card" style="width:100%; padding:1.3rem;">
-        <h2 style="margin:0 0 0.6rem 0;">Create account</h2>
-        <p style="margin:0 0 1rem 0; color:var(--muted);">Join MovieApp — manage your movie collection and enjoy.</p>
+      <!-- Alerts -->
+      <div th:if="${error}" class="alert" th:text="${error}" role="alert"></div>
+      <div th:if="${success}" class="alert-success" th:text="${success}" role="status"></div>
+      <div th:if="${param.error}" class="alert" role="alert">Registration failed — check inputs.</div>
 
-        <!-- Flash messages from controller -->
-        <div th:if="${success}" class="alert-success" th:text="${success}" style="margin-bottom:0.8rem;"></div>
-        <div th:if="${error}" class="alert" th:text="${error}" style="margin-bottom:0.8rem;"></div>
-        <div th:if="${param.error}" class="alert" role="alert" style="margin-bottom:0.8rem;">
-          Registration failed — check inputs.
+      <!-- Register form (plain parameter names) -->
+      <form th:action="@{/register}" method="post" id="registerForm" style="margin-top:10px;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <div class="field">
+          <input name="username" type="text" placeholder="Username" required autocomplete="username" />
         </div>
 
-        <!-- Plain, robust register form (no th:object) -->
-        <form th:action="@{/register}" method="post" id="registerForm" style="display:flex;flex-direction:column;gap:0.75rem; margin-top:0.2rem;">
-          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+       
 
-          <label for="username" style="font-weight:600;">Username</label>
-          <input id="username" name="username" type="text" class="form-control" placeholder="Choose a username" required autofocus />          
+        <div class="field pwd-row">
+          <input id="password" name="password" type="password" placeholder="Password" required autocomplete="new-password" />
+          <button type="button" class="pwd-toggle" id="pwdToggle1" aria-pressed="false" aria-label="Show password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="rgba(255,255,255,0.7)" stroke-width="1.3" />
+              <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.7)" stroke-width="1.3" />
+            </svg>
+          </button>
+        </div>
 
-          <label for="password" style="font-weight:600; margin-top:0.25rem;">Password</label>
-          <input id="password" name="password" type="password" class="form-control" placeholder="Create a password" required />
+        <div class="field pwd-row">
+          <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm password" required />
+          <button type="button" class="pwd-toggle" id="pwdToggle2" aria-pressed="false" aria-label="Show confirm password">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="rgba(255,255,255,0.7)" stroke-width="1.3" />
+              <circle cx="12" cy="12" r="3" stroke="rgba(255,255,255,0.7)" stroke-width="1.3" />
+            </svg>
+          </button>
+        </div>
 
-          <label for="confirmPassword" style="font-weight:600; margin-top:0.25rem;">Confirm password</label>
-          <input id="confirmPassword" name="confirmPassword" type="password" class="form-control" placeholder="Repeat your password" required />
+        <!-- hidden default role -->
+        <input type="hidden" name="role" value="ROLE_USER" />
 
-          <!-- Hidden role (server should ignore/change as needed) -->
-          <input type="hidden" name="role" value="ROLE_USER" />
+        <div class="row-between" style="margin-top:6px;">
+          <div class="note">By creating an account you agree to our <a th:href="@{/terms}" style="color:#fff;text-decoration:underline;">Terms</a>.</div>
+          <div></div>
+        </div>
 
-          <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;">
-            <button type="submit" id="registerBtn" class="btn" aria-label="Register account">Register</button>
-            <a th:href="@{/login}" class="btn-link" style="margin-left:0.4rem;">Back to login</a>
-            <span id="spinner" style="display:none;"><span class="spinner"></span></span>
-          </div>
-        </form>
+        <button type="submit" class="btn-primary">Register</button>
 
-      </div>
-
+        <div class="links">
+          <small class="muted">Already have an account? <a th:href="@{/login}" style="color:#fff; font-weight:700;">Sign in</a></small>
+        </div>
+      </form>
     </section>
   </main>
 
   <div th:insert="~{layout :: siteFooter}"></div>
 
   <script>
-    // prevent double-submit and show spinner
+    // show/hide password toggles and basic client-side password match check
     (function(){
+      const pwd1 = document.getElementById('password');
+      const pwd2 = document.getElementById('confirmPassword');
+      const t1 = document.getElementById('pwdToggle1');
+      const t2 = document.getElementById('pwdToggle2');
+
+      function toggleField(el, btn){
+        if(!el || !btn) return;
+        btn.addEventListener('click', function(){
+          const show = el.type === 'password';
+          el.type = show ? 'text' : 'password';
+          btn.setAttribute('aria-pressed', String(show));
+          btn.title = show ? 'Hide password' : 'Show password';
+        });
+      }
+      toggleField(pwd1,t1); toggleField(pwd2,t2);
+
+      // simple client-side validation for match and disable double-submit
       const form = document.getElementById('registerForm');
-      const btn = document.getElementById('registerBtn');
-      const spinnerWrap = document.getElementById('spinner');
-
-      if(!form) return;
-
+      const submitBtn = form.querySelector('button[type="submit"]');
       form.addEventListener('submit', function(e){
-        // basic client-side validation for matching passwords
-        const pwd = document.getElementById('password').value || '';
-        const cpwd = document.getElementById('confirmPassword').value || '';
-        if (pwd !== cpwd) {
+        if(pwd1 && pwd2 && pwd1.value !== pwd2.value){
           e.preventDefault();
           alert('Passwords do not match.');
+          pwd2.focus();
           return;
         }
-
-        // disable to avoid multi-click
-        btn.disabled = true;
-        spinnerWrap.style.display = 'inline-block';
+        // disable button to avoid double-submit
+        submitBtn.disabled = true;
       });
     })();
   </script>
-
 </body>
 </html>
